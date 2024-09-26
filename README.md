@@ -13,7 +13,7 @@
 
 最终，使用 `ffmpeg` 将这些音频片段按照原视频的节奏依次剪辑在一起，完成了项目。
 
-## 部署前置条件
+## 部署
 
 请确保安装 FFmpeg、MSST WebUI 和 ChatTTS WebUI，然后运行 `pip install -r requirements.txt` 安装所需的库。
 
