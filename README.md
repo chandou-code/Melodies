@@ -15,7 +15,7 @@
 
 ## 部署
 
-请确保安装 FFmpeg、MSST WebUI 和 ChatTTS WebUI，然后运行 `pip install -r requirements.txt` 安装所需的库,并申请百度翻译 API 接口，在 `translation.py` 中填写密钥和 ID。
+请确保安装 FFmpeg、MSST WebUI 和 ChatTTS WebUI，然后运行 `pip install -r requirements.txt` 安装所需的库，并申请百度翻译 API 接口，在 `translation.py` 中填写密钥和 ID。
 
 ## 项目挑战与未来计划
 
