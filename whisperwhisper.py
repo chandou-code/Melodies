@@ -3,6 +3,8 @@
 import whisper
 
 
+
+
 class W():
     def transcribe_audio(self, audio_file, model, language=None):
         # 使用 Whisper 进行转录
@@ -16,7 +18,7 @@ class WF():
         w = W()
         # 确保使用 GPU
         device = "cpu"
-        model = whisper.load_model("medium", device=device)  # 加载模型到 GPU
+        model = whisper.load_model("large", device=device)  # 加载模型到 GPU
 
         # 示例调用
         transcribed_text = w.transcribe_audio(audio_file, model, 'en')
@@ -37,16 +39,8 @@ class WF():
             return False
         return True
 
+
+
+
 if __name__ == '__main__':
-    audio_file = 'temp/TEMP_26.wav'
-    wf = WF()
-    # print(torch.cuda.is_available())
-    transcribed_text = wf.translationF(audio_file)
-
-    print(transcribed_text)
-
-    # import torch
-    # print(torch.__version__)  # 检查PyTorch版本
-    #
-    #
-    # print(torch.cuda.is_available())  # true 则开启成功
+    WF().translationF('/')

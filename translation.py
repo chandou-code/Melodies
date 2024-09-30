@@ -12,8 +12,8 @@ import http.client
 class baiduTranslate():
     def baiduTranslate(self, translate_text, flag=1):
 
-        appid = 'xxxxxxxxxxxxxxxxx'  # 填写你的appid
-        secretKey = 'xxxxxxxxxxxxxxxxx'  # 填写你的密钥
+        appid = '20240918002153723'  # 填写你的appid
+        secretKey = 'tJl1tcva0eOwrD_HPQJJ'  # 填写你的密钥
         httpClient = None
         myurl = '/api/trans/vip/translate'  # 通用翻译API HTTP地址
         fromLang = 'auto'  # 原文语种

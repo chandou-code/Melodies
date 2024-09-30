@@ -8,40 +8,36 @@ import ChatTTS  # 导入文本转语音模块
 import split_audio  # 导入音频切割模块
 import whisperwhisper  # 导入语音识别模块
 import new_audio  # 导入新音频处理模块
+import Current_lry
+
+import Toolbox
 
 if __name__ == '__main__':
-    music_name = 'music/Carly Rae Jepsen - Call Me Maybe_noreverb.mp3'  # 定义音乐文件名
-    pic_path = 'pic/28575553.jpg'
+
+    music_name = 'HOYO-MiX - Da Capo_noreverb' + '.mp3'  # 在当前目录下的mp3
+    url = 'https://music.163.com/song?id=2026565329&userid=129707286'
     dur = 600
     part = 0
-    tks, remove_tks = split_audio.cutting_and_finer_cutting(music_name, part)  # 切割音频并获得更细分的片段
-    split_audio.del_file(remove_tks)
-    print(tks)
-    index = 0
-    # while index < len(tks):
-    while index < len(tks):
-        file_name_without_ext = os.path.splitext(os.path.basename(tks[index]['path']))[0]  # 获取文件名不含扩展名
 
-        # # 识别音频片段中的文本
-        # tks[index]['text'] = whisperwhisper.WF().translationF(tks[index]['path'])
+    # music_name = os.path.join('music', music_name)
+    if Toolbox.check_Cmusic_name(url, music_name):
+        pic_path = Toolbox.checking_path(url)
+        tks = split_audio.cutting_and_finer_cutting(music_name, part)  # 切割音频并获得更细分的片段
+        # tks=[{'path': 'temp\\OK_7.wav', 'text': "I don't feel a single thing"}, {'path': 'temp\\OK_8.wav', 'text': 'Have the pills done too much?'}, {'path': 'temp\\OK_9.wav', 'text': "I've been caught up with my friends in weeks And now we're out of touch I've been driving in that lane"}, {'path': 'temp\\OK_10.wav', 'text': 'And the world feels too big.'}, {'path': 'temp\\OK_11.wav', 'text': "Like a floating ball that's bound to break. Snap my psyche like a twig."}, {'path': 'temp\\OK_14.wav', 'text': 'A little bit tired of quick repairs to cope'}, {'path': 'temp\\OK_15.wav', 'text': "A little bit tired of sinking, there's water in my boat I'm barely breathing, tryna stay afloat, so I got these quick"}, {'path': 'temp\\OK_16.wav', 'text': "We pass to cope. Guess I'm just broken and broke."}, {'path': 'temp\\OK_18.wav', 'text': "The prescription's on its way"}, {'path': 'temp\\OK_19.wav', 'text': "With a name I can't pronounce"}, {'path': 'temp\\OK_20.wav', 'text': 'And the dose I gotta take'}, {'path': 'temp\\OK_23.wav', 'text': "A little bit tired of trying to care when I don't"}, {'path': 'temp\\OK_24.wav', 'text': 'A little bit tired of quick'}, {'path': 'temp\\OK_25.wav', 'text': 'Three pairs to cope.'}, {'path': 'temp\\OK_26.wav', 'text': "A little bit tired, it's sinking, there's water in my boat I'm barely breathing, tryna stay up low So I got these quick repairs to cope Do"}, {'path': 'temp\\OK_28.wav', 'text': 'Get a little bit tired of life.'}, {'path': 'temp\\OK_31.wav', 'text': "It's all the time."}, {'path': 'temp\\OK_33.wav', 'text': "Little bug that's gotta survive"}]
 
-        # 将识别出的文本翻译成中文
-        tks[index]['CNtext'] = translation.baiduTranslate_F().baiduTranslate(tks[index]['text'])
-
-        # 将翻译后的中文文本转成语音
-        tks[index]['AItextPath'] = ChatTTS.TTSF().text2speakF(tks[index]['CNtext'], file_name_without_ext)
-
-        # 合并生成的语音与原音频
-        tks[index]['middlePath'] = new_audio.control_audioF().combined_Mp3(tks[index]['AItextPath'],
-                                                                           tks[index]['path'],
-                                                                           file_name_without_ext, dur)
-        # 将合并的音频转换成的MP4格式
-        tks[index]['finaMp4'] = new_audio.control_audioF().combined_all_wav2mp4(tks[index], file_name_without_ext,
-                                                                                pic_path, dur)
-        index += 1
-
-    print(tks)
-
-    # 根据处理后的数据生成视频
-    file = new_audio.control_audioF().make_videos(tks)
-    new_audio.control_audio().all_temp(tks)
+        print(tks)
+        index = 0
+        # while index < len(tks):
+        while index < len(tks):
+            file_name_without_ext = os.path.splitext(os.path.basename(tks[index]['path']))[0]  # 获取文件名不含扩展名
+            tks[index]['text'], tks[index]['CNtext'] = Current_lry.LRYf().lryF(url, tks[index])
+            tks[index]['AItextPath'] = ChatTTS.TTSF().text2speakF(tks[index]['CNtext'], file_name_without_ext)
+            tks[index]['middlePath'] = new_audio.control_audioF().combined_Mp3(tks[index]['AItextPath'],
+                                                                               tks[index]['path'],
+                                                                               file_name_without_ext, dur)
+            tks[index]['finaMp4'] = new_audio.control_audioF().combined_all_wav2mp4(tks[index], file_name_without_ext,
+                                                                                    pic_path, dur)
+            index += 1
+        # 根据处理后的数据生成视频
+        file = new_audio.control_audioF().make_videos(tks)
+        new_audio.control_audio().all_temp(tks)

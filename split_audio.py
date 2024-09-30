@@ -43,6 +43,7 @@ def cutting_and_finer_cutting(input_file, part):
     # while index < len(chunks):
     if part == 0:
         part = len(chunks)
+    print(f'切割个数:{len(chunks)}')
     while index < part:
         chunk = chunks[index]
         audio_info = {}
@@ -79,8 +80,8 @@ def cutting_and_finer_cutting(input_file, part):
         audio_info['text'] = text
         tks.append(audio_info)
         index += 1
-
-    return tks, remove_tks
+    del_file(remove_tks)
+    return tks
 
 
 def del_file(remove_tks):
