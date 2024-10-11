@@ -15,11 +15,13 @@
 
 ## 部署
 
-请确保安装 FFmpeg、MSST WebUI一键包 、 ChatTTS WebUI一键包，然后运行 `pip install -r requirements.txt` 安装所需的库
+请确保安装 FFmpeg、MSST WebUI一键包 、 ChatTTS WebUI一键包，然后运行 `pip install -r requirements.txt` 安装所需的库，
+将任意格式的音频文件（支持 ncm、flac、mp3）放入 music 文件夹中，启动`python __init__.py`
 
 ## 更新(2024/10/11)
 - **移除** Faster-Whisper 语音识别，改用算法分割。
-- **支持** 日语及所有语言的语音处理。
+- **支持** 日语及所有语言歌曲的语音处理(只要网易云有歌词)。
+- **支持** music文件夹内批量处理音频。
 - **自定义** 生成视频封面（前两帧）。
 - **自定义** 生成视频内容文字。
 
