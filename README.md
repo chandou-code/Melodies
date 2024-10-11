@@ -18,10 +18,10 @@
 请确保安装 FFmpeg、MSST WebUI一键包 、 ChatTTS WebUI一键包，然后运行 `pip install -r requirements.txt` 安装所需的库
 
 ## 更新
-不再需要faster-whisper语音识别(改用算法分割)
-支持日语等所有语音
-自动生成视频封面(前2帧)
-生成视频内容文字
+  不再需要faster-whisper语音识别(改用算法分割)
+  支持日语等所有语音
+  自动生成视频封面(前2帧)
+  生成视频内容文字
 
 
 ## 项目挑战与未来计划
