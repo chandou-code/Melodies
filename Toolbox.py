@@ -6,10 +6,13 @@ import shutil
 from ncmdump import NeteaseCloudMusicFile
 import requests
 import urllib.parse
-
+import glob
 from gradio_client import Client, handle_file
 import os
 import json
+
+from pydub import AudioSegment
+
 import Current_lry
 import pic_making
 
@@ -39,64 +42,89 @@ def pict(image_path):
     # cropped_image.show()
 
 
+def convert_flac_to_mp3(flac_file_path, mp3_file_path):
+    # 读取 FLAC 文件
+    audio = AudioSegment.from_file(flac_file_path, format='flac')
+
+    # 导出为 MP3 文件
+    audio.export(mp3_file_path, format='mp3')
+
+
+def is_flac_file(file_path):
+    try:
+        with open(file_path, 'rb') as f:
+            header = f.read(4)
+            return header == b'fLaC'
+    except Exception as e:
+        print(f"无法检查文件: {e}")
+        return False
+
+
 def turning(name):
     file_path = os.path.join('music', f"{name}.ncm")
+    FLAC = os.path.join('music', f"{name}.flac")
+    endname = os.path.join('music', f"{name}.mp3")
+    print('FLAC1', FLAC)
+    # print(file_path)
+    if os.path.exists(FLAC):
+        convert_flac_to_mp3(FLAC, endname)
     if os.path.exists(file_path):
 
-
-        endname = os.path.join('music', f"{name}.mp3")
         ncmfile = NeteaseCloudMusicFile(os.path.join('music', f"{name}.ncm"))
         ncmfile.decrypt()
-        print(ncmfile.music_metadata)  # show music metadata
+        print(ncmfile.music_metadata)
 
-        ncmfile.dump_music(endname)  # auto detect correct suffix
-        return name
-    else:
-        return name
+        names = ncmfile.dump_music(endname)
+        if is_flac_file(names):
+
+            convert_flac_to_mp3(FLAC, endname)
+
+
+    return name
+
+
+def transform_string(input_str):
+    # 移除逗号和空格
+    return input_str.replace(',', '').replace('$', '').replace(r"'", '').replace('(', '').replace(')', '')
+
 
 class MSST():
     def depart(self, name):
-        client = Client("http://localhost:7860/")
-        result = client.predict(
-            selected_model='dereverb_mel_band_roformer_less_aggressive_anvuew_sdr_18.8050.ckpt',
-            input_audio=[handle_file(f'{name}.mp3')],
-            store_dir="results/",
-            extract_instrumental=False,
-            gpu_id="0",
-            output_format="mp3",
-            force_cpu=False,
-            use_tta=False,
-            api_name="/run_inference_single"
-        )
 
-        fine_name = f'{name}_noreverb.mp3'.split('\\')[-1]
+        fine_name = transform_string(f'{name}_noreverb.mp3')
+        nn = os.path.join('music', f'{name}.mp3')
 
-        path = rf'E:\MSST WebUI\results\{fine_name}'
-        target_path = os.path.join(os.getcwd(), fine_name)
+        music_path = os.path.join(os.getcwd(), 'music', fine_name)
+        if not os.path.exists(music_path):
+            client = Client("http://localhost:7860/")
+            result = client.predict(
+                selected_model='dereverb_mel_band_roformer_less_aggressive_anvuew_sdr_18.8050.ckpt',
+                input_audio=[handle_file(nn)],
+                store_dir="results/",
+                extract_instrumental=False,
+                gpu_id="0",
+                output_format="mp3",
+                force_cpu=False,
+                use_tta=False,
+                api_name="/run_inference_single"
+            )
+            # path = rf'E:\MSST WebUI\results\{fine_name}'
+            results_directory = r'E:\MSST WebUI\results\*'  # 添加 * 来匹配所有文件
 
-        # 移动文件
-        shutil.move(path, target_path)
+            # 获取所有文件
+            file = glob.glob(results_directory)[0]
 
-        return fine_name.split('.')[0]
+            shutil.move(file, music_path)
+            return music_path
+        else:
+            return music_path
 
 
 class MSSTF():
     def departF(self, name):
-        fine_name = f'{name}_noreverb.mp3'
-        target_path = os.path.join(os.getcwd(), fine_name)
-
-        # 检查目标路径是否存在
-        if os.path.exists(target_path):
-            print(f"文件已存在: {target_path}")
-            return fine_name.split('.')[0]
-
-        # 创建 MSST 实例并调用 departF 函数
-        m = MSST()
-        name_with_path = os.path.join('music', name)
-        print(f'正在分离音频 {name_with_path}')
-
-        # 调用 depart 方法
-        return m.depart(name_with_path)
+        name = turning(name)  # ncm2mp3
+        return MSST().depart(name)
+        # return name
 
 
 def get_data(ids):
@@ -177,7 +205,7 @@ def download_lyr(ids):
             data = json.load(file)
             eng = data['eng']
             cn = data['cn']
-            print(f'使用缓存的文件: {file_path}')
+            # print(f'使用缓存的文件: {file_path}')
             # print(eng, cn)
             return eng, cn
     else:
@@ -185,6 +213,8 @@ def download_lyr(ids):
         url1 = f'https://music.163.com/api/song/media?id={ids}'
         url2 = f'https://music.163.com/api/song/lyric?os=pc&id={ids}&lv=-1&tv=-1'
 
+        # print(url2)
+        # print(url1)
         # 请求英文歌词
         r1 = requests.get(url1)
         eng = r1.json().get('lyric', '')
@@ -216,21 +246,25 @@ def get_id(url):
     return song_id
 
 
-def checking_path(url):
+def checking_path(url, mode):
     path = download_pic(get_id(url), get_pic(get_data(get_id(url))))
-    path = pic_making.image_main(path)
+    path = pic_making.image_main(path, mode)
     return path
+
+
+import Current_lry
 
 
 def check_Cmusic_name(url, name):
     file_name = name.split('/')[-1]
-    file_name=file_name.split('.')[0]
+    file_name = file_name.split('.')[0]
     # 分割文件名以提取艺术家和歌曲名
     artist, song_with_extension = file_name.split(' - ')
     song = song_with_extension.split('_')[0]  # 去掉后缀
     ids = get_id(url)
     data = get_data(ids)
     Cname = data['songs'][0]['name']
+    Cname = Current_lry.LRY().remove_parentheses_content(Cname)
     score = Current_lry.LRY().get_right_lry(song, Cname)
     if score > 0.9:
         return True
@@ -238,15 +272,3 @@ def check_Cmusic_name(url, name):
         print(f'song:{song}不匹配{Cname}')
 
         return False
-
-
-def ncm2mp3main(name):
-
-    name = turning(name)  # ncm2mp3
-    # print(name)
-    m = MSSTF().departF(name)
-    print(m)
-
-
-if __name__ == '__main__':
-    ncm2mp3main('HOYO-MiX - Da Capo')  # 把music文件夹下的ncm转换成mp3然后人声分离把音频放到主目录下

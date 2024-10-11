@@ -1,27 +1,42 @@
 # -*- coding: utf-8 -*-
+import os.path
 
 import whisper
 
 
-
-
 class W():
-    def transcribe_audio(self, audio_file, model, language=None):
-        # 使用 Whisper 进行转录
-        result = model.transcribe(audio_file, language=language)
-        return result['text']
+    def transcribe_audio(self, audio_file):
+        from faster_whisper import WhisperModel
+
+        model_size = "medium"
+
+        # Run on GPU with FP16
+        # model = WhisperModel(model_size, device="cuda", compute_type="float16")
+
+        # or run on GPU with INT8
+        # model = WhisperModel(model_size, device="cuda", compute_type="int8_float16")
+        # or run on CPU with INT8
+        model = WhisperModel(model_size, device="cpu", compute_type="int8")
+
+        segments, info = model.transcribe(os.path.abspath(audio_file), beam_size=5)
+
+        # print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
+        text = ''
+        for segment in segments:
+            # print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
+            text += segment.text
+        try:
+            print(text)
+        except Exception as e:
+            print(f"语言检测错误: {e}")
+            text = ''
+        return text
 
 
 class WF():
     def translationF(self, audio_file):
         # 加载 Whisper 模型
-        w = W()
-        # 确保使用 GPU
-        device = "cpu"
-        model = whisper.load_model("large", device=device)  # 加载模型到 GPU
-
-        # 示例调用
-        transcribed_text = w.transcribe_audio(audio_file, model, 'en')
+        transcribed_text = W().transcribe_audio(audio_file)
 
         # 判断转录文本是否有效
         if self.is_meaningful(transcribed_text):
@@ -35,12 +50,16 @@ class WF():
             return False
         # 可以添加更多逻辑来判断文本内容是否有意义
         # 例如：检查文本长度、是否包含特定关键词等
-        if len(text) < 5:  # 示例：如果文本长度小于5，认为是无意义的
+        if len(text) < 4:  # 示例：如果文本长度小于5，认为是无意义的
             return False
         return True
 
 
-
-
 if __name__ == '__main__':
-    WF().translationF('/')
+    # import torch
+    #
+    # print(torch.version.cuda)  # 输出CUDA版本
+
+    print(WF().translationF('temp/TEMP_4.wav'))
+    # print(whisper.__file__)
+#

@@ -1,5 +1,6 @@
 # API调用代码
 import os
+import random
 import shutil
 import time
 
@@ -7,11 +8,14 @@ import requests
 
 
 class TTS():
+
+
     def text2speak(self, text):
+        voice = random.choice([2222, 3333])
         res = requests.post('http://127.0.0.1:9966/tts', data={
             "text": f"{text}",
             "prompt": "",
-            "voice": "5099",
+            "voice":  str(voice),
             "temperature": 0.3,
             "top_p": 0.7,
             "top_k": 20,

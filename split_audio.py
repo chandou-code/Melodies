@@ -6,6 +6,7 @@ from pydub import AudioSegment
 from pydub.silence import split_on_silence
 import os
 import whisperwhisper
+import search
 
 
 def list_temp_files():
@@ -31,10 +32,14 @@ def cutting_and_finer_cutting(input_file, part):
     duration_ms = len(sound)
     silence_thresh = loudness - 10
 
+    # chunks = split_on_silence(sound,
+    #                           min_silence_len=340,
+    #                           silence_thresh=silence_thresh,
+    #                           keep_silence=240)
     chunks = split_on_silence(sound,
-                              min_silence_len=340,
+                              min_silence_len=320,
                               silence_thresh=silence_thresh,
-                              keep_silence=240)
+                              keep_silence=220)
 
     tks = []
     index = 0
@@ -46,13 +51,24 @@ def cutting_and_finer_cutting(input_file, part):
     print(f'切割个数:{len(chunks)}')
     while index < part:
         chunk = chunks[index]
+        # 过滤掉长度小于1秒的片段
+        if len(chunk) < 800:  # 小于1000毫秒，即1秒
+            # print(f'忽略小于1秒的片段: {len(chunk) / 1000}秒')
+            index += 1
+            continue
+
         audio_info = {}
         file = os.path.join(path, f"TEMP_{index}.wav")
         chunk.export(file, format="wav")
+
         try:
             text = whisperwhisper.WF().translationF(file)
         except UnicodeEncodeError as e:
             print(f"忽略错误: {e}")
+            index += 1
+            continue
+        except Exception as e:
+            print(f"其他错误: {e}, 跳过文件: {file}")
             index += 1
             continue
         if text == '' or text is None:
@@ -71,6 +87,13 @@ def cutting_and_finer_cutting(input_file, part):
 
             remove_tks.append(file)
             continue
+        if any(word in text for word in ['Yeah', 'haha', 'yeah', 'oh', 'OH', 'Oh']):
+            print('noway', text, word_count)
+            index += 1
+
+            remove_tks.append(file)
+            continue
+
         file_name = os.path.join(path, f'OK_{index}.wav')
         shutil.move(file, file_name)
 
@@ -81,19 +104,24 @@ def cutting_and_finer_cutting(input_file, part):
         tks.append(audio_info)
         index += 1
     del_file(remove_tks)
+    tks = search.remove_if_similar(tks)
     return tks
 
 
 def del_file(remove_tks):
     for file_path in remove_tks:
         try:
-            if os.path.isfile(file_path):  # 检查文件是否存在
-                os.remove(file_path)  # 删除文件
+
+            if os.path.isfile(file_path['path']):  # 检查文件是否存在
+                os.remove(file_path['path'])  # 删除文件
                 print(f"已删除: {file_path}")
             else:
                 print(f"文件不存在: {file_path}")
         except Exception as e:
             print(f"删除文件时出错: {file_path}, 错误信息: {e}")
+
+
+
 
 
 # 示例调用`

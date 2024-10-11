@@ -13,41 +13,80 @@ logging.basicConfig(filename='app.log', level=logging.INFO,
 
 # 输入字符串
 class LRY():
+    def remove_parentheses_content(self,input_string):
+        # 使用正则表达式匹配括号及其中的内容
+        result = re.sub(r'\(.*?\)', '', input_string)
+        return result.strip()  # 去掉前后的空白
     def lry(self, input_string, input_cn_string):
+        input_cn_string=self.remove_parentheses_content(input_cn_string)
+        input_string = input_string.replace('\u2005', '').replace('\xa0',' ')
+        # print(repr(input_string))
+        if self.check_mode(input_string) == 4 or self.check_mode(input_cn_string) == 4:
+            pattern = r'\[(\d{2}:\d{2}\.\d{3})\](.*?)(?=\[\d{2}:\d{2}\.\d{3}\]|$)'
 
-        if any(line.startswith("[by:") for line in input_string.splitlines()):
-            # 如果有以 [by: 开头的行，使用第一种模式
-            pattern = r'\[(\d{2}:\d{2}\.\d{2})\](.*?)(?=\[\d{2}:\d{2}\.\d{2}\]|$)'
             input_string = "\n".join([line for line in input_string.splitlines() if not line.startswith("[by:")])
             input_cn_string = "\n".join([line for line in input_cn_string.splitlines() if not line.startswith("[by:")])
         else:
             # 否则使用第二种模式
-            pattern = r'\[(\d{2}:\d{2}\.\d{3})\](.*?)(?=\[\d{2}:\d{2}\.\d{3}\]|$)'
-
-
-        # print('input_string',input_string)
-        # print('input_cn_string',input_cn_string)
-        # 使用正则表达式匹配时间戳和文本
-
-        # pattern = r'\[(\d{2}:\d{2}\.\d{2})\](.*?)(?=\[\d{2}:\d{2}\.\d{2}\]|$)'
-        # pattern = r'\[(\d{2}:\d{2}\.\d{3})\](.*?)(?=\[\d{2}:\d{2}\.\d{3}\]|$)'
+            pattern = r'\[(\d{2}:\d{2}\.\d{2})\](.*?)(?=\[\d{2}:\d{2}\.\d{2}\]|$)'
 
 
         matches1 = re.findall(pattern, input_string, re.DOTALL)
         matches2 = re.findall(pattern, input_cn_string, re.DOTALL)
-        # print('matches1', matches1)
-        # print('matches2', matches2)
+        # print(matches1)
+        # print(matches2)
         # 转换为字典列表
         result1 = []
         for i, (start, text) in enumerate(matches1):
             end = matches1[i + 1][0] if i + 1 < len(matches1) else None
 
-            # 找到对应的中文文本
-            cn_text = matches2[i][1].strip() if i < len(matches2) else None
+            if text.strip():  # 检查 text 是否为空
+                result1.append({'text': text.strip(), 'start': start, 'end': end})
 
-            result1.append({'text': text.strip(), 'start': start, 'end': end, 'cntext': cn_text})
+        result2 = []
+        for i, (start, text) in enumerate(matches2):
+            end = matches2[i + 1][0] if i + 1 < len(matches2) else None
 
-        return result1
+            if text.strip():  # 检查 text 是否为空
+                result2.append({'cntext': text.strip(), 'start': start, 'end': end})
+        combined_results = {}
+
+        # 将 result1 的数据存入字典
+        for entry in result1:
+            start = entry['start']
+            combined_results[start] = {
+                'text': entry['text'],
+                'end': entry['end'],
+                'cntext': None  # 初始化 cntext 为 None
+            }
+
+        # 将 result2 的数据合并到字典中
+        for entry in result2:
+            start = entry['start']
+            if start in combined_results:
+                combined_results[start]['cntext'] = entry['cntext']  # 更新 cntext
+
+        # 将字典转换为列表
+        final_result = [{'start': start, **data} for start, data in combined_results.items()]
+
+
+        return final_result
+
+    def check_mode(self, input_string):
+
+        start_index = input_string.find('[00')
+        if start_index != -1:
+            # 切片，从 '[00' 开始到字符串结束
+            input_string = input_string[start_index:]
+            # print(repr(input_string))
+
+        start_index = input_string.find('[')
+        end_index = input_string.find(']', start_index)
+
+        # 提取并打印第一个时间戳
+        if start_index != -1 and end_index != -1:
+            first_timestamp = input_string[start_index:end_index + 1]
+            return len(first_timestamp.split('.')[-1])
 
     def get_right_lry(self, text1, text2):
         similarity = difflib.SequenceMatcher(None, text1, text2).ratio()
@@ -56,7 +95,7 @@ class LRY():
 
     def score(self, transcribed_text, texts):
         index = 0
-        print(texts)
+        # print(texts)
         highest_score = 0
         highest_index = 0
 
@@ -87,18 +126,18 @@ class LRY():
         text = texts[highest_index]['text']
         cntext = texts[highest_index]['cntext']
 
-        if highest_index + 1 < len(texts):  # 确保索引不越界
-            text += f" {texts[highest_index + 1]['text']}"
-            cntext += f" {texts[highest_index + 1]['cntext']}"
-            # print('\n')
-            # print(text)
-            # print(cntext)
+        # if highest_index + 1 < len(texts):  # 确保索引不越界
+        #     text += f" {texts[highest_index + 1]['text']}"
+        #     cntext += f" {texts[highest_index + 1]['cntext']}"
+        # print('\n')
+        # print(text)
+        # print(cntext)
         score = self.get_right_lry(transcribed_text, text)
         if score > 0.8:
             # print('best_match_text', '|', transcribed_text, cntext)
             return text, cntext, score
         else:
-            cntext = translation.baiduTranslate_F().baiduTranslate(transcribed_text)
+            cntext = translation.baiduTranslate_F().Translate(transcribed_text)
             return transcribed_text, cntext, 0
 
 
@@ -106,25 +145,16 @@ class LRYf():
     def lryF(self, url, tk):
         eng, cn = Toolbox.download_lyr(Toolbox.get_id(url))
 
-        l = LRY()
         transcribed_text = tk['text']
-        texts = l.lry(eng, cn)
-        print('texts', texts)
-        text, cntext, score = l.score(transcribed_text, texts)
-        logging.info(f'{text}|{cntext}|{score}')
+        texts = LRY().lry(eng, cn)
+
+        text, cntext, score = LRY().score(transcribed_text, texts)
+        # logging.info(f'{text}|{cntext}|{score}')
         # print(text, cntext, score)
         return text, cntext
 
-
-# if __name__ == '__main__':
-#     # input_string = '[00:02.366]Lately I wanna stay awake\n[00:04.866]I don’t want the days to end\n[00:09.866]I know you’ll fly away\n[00:12.615]Need to hold you for myself\n[00:17.115]I feel the time run through my hands\n[00:20.115]Try to grab it but it fades\n[00:23.120]Say "goodbye" in all the possible ways\n[00:31.619]I don’t want you to get lost\n[00:34.117]Will we ever meet again?\n[00:35.869]I’ll anesthetize the pain\n[00:37.617]Please remember our summers\n[00:39.620]My heart is closed by duel\n[00:41.620]Will I learn to love again?\n[00:43.616]Who will walk with me in the rain?\n[00:45.618]Please remember our summers\n[01:18.116]Come the sun,\n[01:20.116]come the rain\n[01:22.616]and the leaves falling\n[01:25.616]I will wait even if the seasons change\n[01:31.918]Anxiety runs through my veins\n[01:35.069]I’ll escape from all these chains\n[01:37.869]Say “come back”, in all the possible ways\n[01:46.367]I don’t want you to get lost\n[01:48.867]Will we ever meet again?\n[01:50.867]I’ll anesthetize the pain\n[01:52.867]Please remember our summers\n[01:54.620]My heart is closed by duel\n[01:56.617]Will I learn to love again?\n[01:58.367]Who will walk with me in the rain?\n[02:00.367]Please remember our summers'
-#     # input_cn_string='[00:02.366]最近我想保持清醒\n[00:04.866]我舍不得这些美好的日子就这样结束\n[00:09.866]我明白你终究会离我远去\n[00:12.615]我多想紧紧抱住你留住你的一丝气息\n[00:17.115]我能感受得到时光如沙，在我掌心里慢慢流逝\n[00:20.115]我疯狂地想紧紧抓住，但它只是流逝得更快\n[00:23.120]用任何可能的方式说再见\n[00:31.619]我不想把你弄丢\n[00:34.117]我们还会再见面吗？\n[00:35.869]我会麻醉疼痛自己疗伤\n[00:37.617]请你记住我们一起度过的那些夏天\n[00:39.620]我的心门被紧紧关闭了\n[00:41.620]我还能再次拥有爱一个人的能力吗？\n[00:43.616]谁还会再陪我在雨中漫步？\n[00:45.618]请你，一定要记得我们一起度过的那些夏天\n[01:18.116]在阳光下\n[01:20.116]在雨中\n[01:22.616]在落叶纷飞里\n[01:25.616]四季交替，我会一直在这里等你\n[01:31.918]悲伤与焦虑顺着血管在我身体里蔓延\n[01:35.069]我终有一天能挣脱这些痛苦的枷锁\n[01:37.869]说“回来吧”，用所有可能的方式\n[01:46.367]我不想把你弄丢\n[01:48.867]我们还会再见面吗？\n[01:50.867]我会麻醉疼痛自己疗伤\n[01:52.867]请你记住我们一起度过的那些夏天\n[01:54.620]我的心门被紧紧关闭了\n[01:56.617]我还能再次拥有爱一个人的能力吗？\n[01:58.367]谁还会再陪我在雨中漫步？\n[02:00.367]请你一定要记得我们一起度过的那些夏天'
-#     # file='temp/OK_0.wav'
-#     tks = [{'path': 'temp\\OK_0.wav',
-#             'text': "I threw a wish in the well, don't ask me I'll never tell, I looked at you as it fell"},
-#            {'path': 'temp\\OK_1.wav', 'text': "And now you're in my way"},
-#            {'path': 'temp\\OK_2.wav', 'text': 'I trade my soul for a wish'}]
-#
-#     url = 'https://music.163.com/song?id=17112299&userid=129707286'
-#
-#     print(LRYf().lryF(url, tks[2]))
+if __name__ == '__main__':
+    matches1=[('00:16.103', ' How many times can I tell you\n'), ('00:20.331', " You're lovely just the way you are\n"), ('00:24.140', " Don't let the world come and change you\n"), ('00:28.685', " Don't let life break your heart\n"), ('00:31.884', " Don't put on their mask don't wear their disguise\n"), ('00:35.503', " Don't let them dim the light that shines in your eyes\n"), ('00:39.566', ' If only you could love yourself the way that I love you\n'), ('00:47.154', '\n'), ('01:03.063', ' How many times can I say\n'), ('01:07.696', " You don't have to change a thing\n"), ('01:10.776', " Don't let the tide wash you away\n"), ('01:15.482', " Don't let worry ever clip your wings\n"), ('01:19.140', ' Discard what is fake keep what is real\n'), ('01:22.897', ' Pursue what you love embrace how you feel\n'), ('01:26.634', ' If only you could love yourself the way that I love you\n'), ('01:34.842', '\n'), ('01:39.066', ' And if you ever choose a road that leads nowhere\n'), ('01:45.225', " All alone and you can't see right from wrong\n"), ('01:54.944', ' And if you ever lose yourself out there\n'), ('02:01.528', ' Come on home\n'), ('02:03.933', " And I'll sing you this song\n"), ('02:06.993', '\n'), ('02:10.722', ' So how many times can I tell you\n'), ('02:16.362', " You're lovely just the way you are\n"), ('02:19.461', " Don't let the world come and change you\n"), ('02:24.554', " Don't let life break your heart")]
+    matches2=[('00:16.103', '我已无数次地告诉过你\n'), ('00:20.331', '你本就是你那副纯粹可爱的模样\n'), ('00:24.140', '请不要任由世界将你所改变\n'), ('00:28.685', '也别让生活令你心碎至极\n'), ('00:31.884', '不要戴上虚伪的面具 将自己伪装\n'), ('00:35.503', '也别任由他人 黯淡你眼中的光芒\n'), ('00:39.566', '倘若你能像我爱你这样 爱自己 那该多好\n'), ('01:03.063', '我早就说过无数次了\n'), ('01:07.696', '你无需做出改变\n'), ('01:10.776', '不要任由洪荒将你本貌所涤荡\n'), ('01:15.482', '也别让愁苦忧虑 将你的羽翼禁锢\n'), ('01:19.140', '摒弃虚伪 保持真我\n'), ('01:22.897', '竭力追寻心之所向 拥抱心扉所感\n'), ('01:26.634', '倘若你能像我爱你这样 爱自己 那该多好\n'), ('01:39.066', '倘若你误入歧途 不得出逃\n'), ('01:45.225', '孤零飘荡 无法辨识正确去向\n'), ('01:54.944', '倘若你就此迷失真我\n'), ('02:01.528', '那便 返璞归真吧\n'), ('02:03.933', '我将为你吟唱这首歌谣\n'), ('02:10.722', '我已无数次地告诉过你\n'), ('02:16.362', '你本就是你那副纯粹可爱的模样\n'), ('02:19.461', '请不要任由世界将你所改变\n'), ('02:24.554', '也别让生活令你心碎至极')]
+    print(matches1)
+    print(matches2)
