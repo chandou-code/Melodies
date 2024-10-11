@@ -5,7 +5,7 @@
 本项目利用以下技术实现创新的磨听力视频格式：
 - **ChatTTS**: 进行语音合成
 - **MSST**: 进行人声分离
-- **Whisper**: 进行语音识别
+
 
 我们将传统的磨听力视频格式（“三句英文 + 一句中文 + 一句英文”）进行了改造：
 - **英文部分**: 替换为英文歌曲片段
@@ -15,7 +15,11 @@
 
 ## 部署
 
-请确保安装 FFmpeg、MSST WebUI 和 ChatTTS WebUI的一键包，然后运行 `pip install -r requirements.txt` 安装所需的库，并申请百度翻译 API 接口，在 `translation.py` 中填写密钥和 ID。
+请确保安装 FFmpeg、MSST WebUI 和 ChatTTS WebUI的一键包，然后运行 `pip install -r requirements.txt` 安装所需的库
+
+## 更新
+不再需要faster-whisper语音识别，改用算法分割。
+可以使用日语歌
 
 ## 项目挑战与未来计划
 
