@@ -10,7 +10,7 @@ from pathlib import Path
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from moviepy.video.VideoClip import ImageClip
 
-from myproject.musics.new_audio import control_audio
+import new_audio
 import pic_making
 
 
@@ -133,7 +133,8 @@ def get_random_cover(mode):
         directory = Path('cover_tk')
     elif mode == 'b':
         directory = Path('cover_b')
-
+    elif mode=='c':
+        directory = Path('content_pic')
     # 检查目录是否存在
     if not directory.exists() or not directory.is_dir():
         raise FileNotFoundError(f"目录 '{directory}' 不存在")
@@ -160,8 +161,8 @@ def main(mode, file_path):
         "坚持磨耳朵",
         "音乐学习法",
         "歌词学习",
-        "AI驱动",
-        "英文歌曲"
+        # "AI驱动",
+        # "英文歌曲"
 
     ]
     items1 = [

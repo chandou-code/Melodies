@@ -76,7 +76,8 @@ def crop_image_content(input_path,target_size):
             if cropped_img.mode == 'RGBA':
                 cropped_img = cropped_img.convert('RGB')
 
-            output_path = os.path.join('cover_output', f'{input_path.split("/")[-1].split(".")[0]}{time.time()}.jpg')
+            output_path = os.path.join('cover_output', f'{os.path.basename(input_path)}')
+            # output_path = os.path.join('cover_output', f'{input_path.split("/")[-1].split(".")[0]}{time.time()}.jpg')
 
             # 保存新的图片
             cropped_img.save(output_path)

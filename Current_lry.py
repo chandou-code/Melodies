@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import re
-import whisperwhisper
+
 import difflib
 import Toolbox
-from myproject.musics import translation
+
 import logging
 
 # 配置日志设置
@@ -18,17 +18,20 @@ class LRY():
         result = re.sub(r'\(.*?\)', '', input_string)
         return result.strip()  # 去掉前后的空白
     def lry(self, input_string, input_cn_string):
+
         input_cn_string=self.remove_parentheses_content(input_cn_string)
         input_string = input_string.replace('\u2005', '').replace('\xa0',' ')
-        # print(repr(input_string))
+        print(repr(input_string))
+        print(repr(input_cn_string))
         if self.check_mode(input_string) == 4 or self.check_mode(input_cn_string) == 4:
             pattern = r'\[(\d{2}:\d{2}\.\d{3})\](.*?)(?=\[\d{2}:\d{2}\.\d{3}\]|$)'
 
             input_string = "\n".join([line for line in input_string.splitlines() if not line.startswith("[by:")])
             input_cn_string = "\n".join([line for line in input_cn_string.splitlines() if not line.startswith("[by:")])
         else:
-            # 否则使用第二种模式
+            print('否则使用第二种模式')
             pattern = r'\[(\d{2}:\d{2}\.\d{2})\](.*?)(?=\[\d{2}:\d{2}\.\d{2}\]|$)'
+
 
 
         matches1 = re.findall(pattern, input_string, re.DOTALL)
@@ -137,7 +140,7 @@ class LRY():
             # print('best_match_text', '|', transcribed_text, cntext)
             return text, cntext, score
         else:
-            cntext = translation.baiduTranslate_F().Translate(transcribed_text)
+            # cntext = translation.baiduTranslate_F().Translate(transcribed_text)
             return transcribed_text, cntext, 0
 
 

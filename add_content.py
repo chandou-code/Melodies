@@ -18,7 +18,7 @@ def create_text_image(text,size):
 def add_text2video(inputfile, music_name1):
     text_image1 = create_text_image("英语歌词磨听力开源",80)
 
-    text_image2 = create_text_image(f"BGM:{music_name1.split('-')[-1]}",40)
+    text_image2 = create_text_image(f"BGM:{music_name1.split('-')[-1].split('_')[0]}",40)
 
     text_image1.save("temp/text_image1.png")
     text_image2.save("temp/text_image2.png")

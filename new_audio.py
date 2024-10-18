@@ -102,7 +102,7 @@ class control_audio():
     def create_mp4Withsrt(self, V, S):
         subtitle_file = S
         file = os.path.abspath(os.path.join(f'F{int(time.time())}.mp4'))
-        print('file', file, 'subtitle_file', subtitle_file,'V',V)
+        print('file', file, 'subtitle_file', subtitle_file, 'V', V)
         ffmpeg.input(V).output(file, vf='subtitles=' + subtitle_file).run()
 
         return file, V, S
@@ -123,13 +123,6 @@ class control_audio():
             cn_begin = duration_en + dur
 
             # 添加中文字幕
-            # subs.append(pysrt.SubRipItem(
-            #     index=index,
-            #     start=pysrt.SubRipTime(seconds=cn_begin / 1000),
-            #     end=pysrt.SubRipTime(seconds=(cn_begin + duration_cn) / 1000),
-            #     text=tk['CNtext']
-            # ))
-            index += 1
             subs.append(pysrt.SubRipItem(
                 index=index,
                 start=pysrt.SubRipTime(seconds=cn_begin / 1000),
@@ -137,7 +130,13 @@ class control_audio():
                 text=tk['text']
             ))
             index += 1
-
+            subs.append(pysrt.SubRipItem(
+                index=index,
+                start=pysrt.SubRipTime(seconds=cn_begin / 1000),
+                end=pysrt.SubRipTime(seconds=(cn_begin + duration_cn) / 1000),
+                text=tk['CNtext']
+            ))
+            index += 1
             subs.append(pysrt.SubRipItem(
                 index=index,
                 start=pysrt.SubRipTime(seconds=eng_begin / 1000),
@@ -196,6 +195,20 @@ class control_audio():
         shutil.move(combined_video, destination)
         return destination
 
+    def change_speed(self, file):
+        original_audio = AudioSegment.from_file(file)
+        speed_changed_audio = original_audio.speedup(playback_speed=1.2)
+
+        basename = os.path.basename(file)  # 获取文件名部分
+
+        result=os.path.join('temp',basename[:-4] +'Speed'+'.wav')
+        # 导出处理后的音频为临时文件
+
+        speed_changed_audio.export(result, format="wav")
+        print('result',result)
+        return result
+        # 更新 audio_info 使用处理后的音频
+
 
 class control_audioF():
 
@@ -241,23 +254,26 @@ class control_audioF():
 
         # 处理 TikTok 视频
         tik_video = process_video('dy', pic_path_tiktok_, 'tiktokMp4', 'finish_dy')
-
+        # bili_video
+        # tik_video
         # return bili_video, tik_video
         return bili_video, tik_video
 
         # full_path = os.path.join(path, f'{int(time.time())}.wav')
 
-    def combined_Mp3(self, Vpath, Dpath, file_name_without_ext, dur):
-        c = control_audio()
-        control_audio().adjust_audio_volume(Vpath, 5)
-
+    def combined_Mp3(self, Vpath, Dpath, file_name_without_ext, dur,Sound):
+        # Vpath = control_audio().change_speed(Vpath)
+        # Dpath2=control_audio().change_speed(Dpath)
+        # Dpath1 = control_audio().change_speed(Dpath, 1.4)
+        control_audio().adjust_audio_volume(Vpath, 7)
         audio_info = [
-            (Dpath, dur),  # 使用减慢速度的音频
-            (Vpath, dur),
             (Dpath, dur),
-            ("resource/叮.mp3", dur)
+            (Vpath, dur),
+            (Dpath, dur+dur),
+            (Sound, dur),
+            ("resource/叮.mp3", dur),
         ]
-        middle_wav_path = c.combined_mp3(audio_info, file_name_without_ext)
+        middle_wav_path = control_audio().combined_mp3(audio_info, file_name_without_ext)
         return os.path.abspath(middle_wav_path)
 
     def combined_all_wav2mp4(self, tk, file_name_without_ext, dur, pic_path_tiktok, pic_path_bili):

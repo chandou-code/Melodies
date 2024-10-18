@@ -11,7 +11,8 @@ class TTS():
 
 
     def text2speak(self, text):
-        voice = random.choice([2222, 3333])
+        print('text',text)
+        voice = random.choice([2222])
         res = requests.post('http://127.0.0.1:9966/tts', data={
             "text": f"{text}",
             "prompt": "",
@@ -25,7 +26,7 @@ class TTS():
             "is_split": 1,
             "custom_voice": 0
         })
-
+        print(res.json())
         return res.json()['audio_files'][0]['filename']
 
 
@@ -34,7 +35,10 @@ class TTSF():
         t = TTS()
         path = f'temp'
         full_path = os.path.join(path, f'V{int(time.time())}_{p}.wav')
-        shutil.move(t.text2speak(text), full_path)
+        path=t.text2speak(text)
+        print('path',path)
+        shutil.move(path, full_path)
+        print('full_path',full_path)
         return full_path
 
 # {code:0, msg:'ok', audio_files:[{filename: E:/ChatTTS-UI-0.84/static/wavs/215144_use3.13s-audio2.21s-seed5099-te0.3-tp0.7-tk20-textlen8-81768.wav, url: http://127.0.0.1:9966/static/wavs/215144_use3.13s-audio2.21s-seed5099-te0.3-tp0.7-tk20-textlen8-81768.wav}]}

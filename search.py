@@ -51,35 +51,36 @@ def remove_if_similar(item_list):
 
 
 def pre_(url, name):
-    try:
-        eng, cn = Toolbox.download_lyr(Toolbox.get_id(url))
-        # print(cn)
+    # try:
+    eng, cn = Toolbox.download_lyr(Toolbox.get_id(url))
+    # print(cn)
 
-        tt = Current_lry.LRY().lry(eng, cn)
-        print('tt',url,name, tt)
-        tt = remove_if_similar(tt)
-        texts = [item['text'] for item in tt]
+    tt = Current_lry.LRY().lry(eng, cn)
+    print('tt', url, name, tt)
+    tt = remove_if_similar(tt)
+    texts = [item['text'] for item in tt]
 
-        # 使用 Counter 统计次数
+    # 使用 Counter 统计次数
 
-        # print('tt', name, tt)
-    except UnicodeEncodeError:
-        return False, 1  # 返回 False 以表示发生了错误
+    # print('tt', name, tt)
+    # except UnicodeEncodeError:
+    #     return False, 1  # 返回 False 以表示发生了错误
 
     if not tt:  # 判断是否存在英文歌词
+        print('if not tt')
         return False, 1
     if not cn:  # 判断是否存在中文歌词
+        print('if not cn')
         return False, 1
 
     text_counts = Counter(texts)
     most_common = text_counts.most_common(1)  # 1 表示只获取最高频率的元素
     highest_text, highest_count = most_common[0]  # 提取文本和次数
-    with open('output.txt', 'a') as f:  # 'a' 表示追加模式
+    with open('output.txt', 'a',encoding='utf-8') as f:  # 'a' 表示追加模式
         f.write(f"{name} | {highest_text} | {highest_count}\n")
 
     # if highest_count > 5:  # 一句话出现频率过高
     #     return False, 1
-
 
     count_count = 0
     words_count = 0
@@ -116,7 +117,6 @@ def pre_(url, name):
         #     print(text)
         #     count_count += 1000
         #     continue
-
 
     # print(count)
     ratio = (count_count + words_count) / len(tt)  # 直接除法会得到浮点数
@@ -172,6 +172,7 @@ def main():
     for file in file_names:
         name, Curl, f = get_id_by_name(file['name'])
         if not f:  # 首先过滤纯音乐/没有歌词的音乐
+            print('if not f')
             file['Flag'] = False
             file['Curl'] = Curl
             file['score'] = 1
@@ -183,7 +184,7 @@ def main():
         file['Curl'] = Curl
 
         pres.append(file)
-    print(pres)
+    print('pres',pres)
     return pres
 
 
