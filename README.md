@@ -1,4 +1,4 @@
-# Melodies of Learning
+# Melodies
 
 ## 项目简介
 
